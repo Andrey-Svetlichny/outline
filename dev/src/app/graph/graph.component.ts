@@ -17,19 +17,24 @@ export interface SvgLine {
 })
 export class GraphComponent {
 
+  public lines: SvgLine[] = [
+    {p1: {x: 11, y: 40}, p2: {x: 80, y: 42}},
+    {p1: {x: 10, y: 50}, p2: {x: 90, y: 53}},
+    {p1: {x: 25, y: 25}, p2: {x: 60, y: 90}},
+    {p1: {x: 25, y: 15}, p2: {x: 60, y: 80}},
+    {p1: {x: 25, y:  5}, p2: {x: 60, y: 70}}
+    ];
+  public points: SvgPoint[] = [].concat(...this.lines.map(l => [l.p1, l.p2]));
 
-  public line: SvgLine = {p1: {x: 10, y: 80}, p2: {x: 90, y: 20}};
-  public points: SvgPoint[] = [this.line.p1, this.line.p2];
-
-  draggingPoint: any;
+  draggingPoint: {x0: number, y0: number};
 
   svgSelect = (id: string) => {
-    const pointId = parseInt(id, 10);
-    const point = this.points[pointId];
-    this.draggingPoint = {id: pointId, x0: point.x, y0: point.y};
+    const point = this.points[id];
+    this.draggingPoint = {x0: point.x, y0: point.y};
+    console.log(point.x, point.y);
   }
 
-  svgDrag = (id: number, x: number, y: number) => {
+  svgDrag = (id: string, x: number, y: number) => {
     const point = this.points[id];
     point.x = this.draggingPoint.x0 + x;
     point.y = this.draggingPoint.y0 + y;
