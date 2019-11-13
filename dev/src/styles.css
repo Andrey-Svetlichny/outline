@@ -1,0 +1,6 @@
+body {
+  margin:0;     /* This is used to reset any browser-default margins */
+  height:100vh; /* This is needed to overcome a Chrome bug. */
+  width:100vw;  /* As above. */
+  overflow:hidden;
+}
