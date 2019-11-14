@@ -5,9 +5,7 @@ import {
   segmentsIntersects
 } from "../geometry";
 
-export interface SvgPoint {
-  x: number;
-  y: number;
+export interface SvgPoint extends IPoint{
   line?: SvgLine;
 }
 export interface SvgLine {
@@ -65,14 +63,9 @@ export class GraphComponent {
   private checkIntersect() {
     const l1 = this.lines[0];
     const l2 = this.lines[1];
-    const p: IPoint = {x: l1.p1.x, y: l1.p1.y};
-    const p2: IPoint = {x: l1.p2.x, y: l1.p2.y};
-    const q: IPoint = {x: l2.p1.x, y: l2.p1.y};
-    const q2: IPoint = {x: l2.p2.x, y: l2.p2.y};
-    const hasIntersect = segmentsIntersects(p, p2, q, q2);
+    const hasIntersect = segmentsIntersects(l1.p1, l1.p2, l2.p1, l2.p2);
 
-    const point = segmentsIntersectionPoint(p.x,p.y, p2.x,p2.y, q.x,q.y, q2.x,q2.y);
-    this.inters = {x: point[0], y: point[1], color: hasIntersect ? 'red' : 'blue'};
-    console.log(point);
+    this.inters = segmentsIntersectionPoint(l1.p1, l1.p2, l2.p1, l2.p2);
+    this.inters.color = hasIntersect ? 'red' : 'blue';
   }
 }

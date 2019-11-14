@@ -40,10 +40,11 @@ export function segmentsIntersects(p: IPoint, p2: IPoint, q: IPoint, q2: IPoint)
 }
 
 
-export function segmentsIntersectionPoint(x1,y1,x2,y2,x3,y3,x4,y4) {
+export function segmentsIntersectionPoint(p1: IPoint, p2: IPoint, p3: IPoint, p4: IPoint): IPoint {
+  const x1=p1.x, y1=p1.y, x2=p2.x, y2=p2.y, x3=p3.x, y3=p3.y, x4=p4.x, y4=p4.y;
   const px= ( (x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4) ) / ( (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4) )
   const py= ( (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4) ) / ( (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4) )
-  return [px, py]
+  return {x: px, y: py};
 }
 
 
