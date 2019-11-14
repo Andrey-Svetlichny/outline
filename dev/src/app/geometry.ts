@@ -3,12 +3,39 @@ export interface IPoint {
   y: number;
 }
 
+export interface ILine {
+  p1: IPoint;
+  p2: IPoint;
+}
+
+/**
+ * Angle between 2 vectors
+ */
+export function lineAngle(l1: ILine, l2: ILine) {
+  const x1 = l1.p2.x - l1.p1.x, y1 = l1.p2.y - l1.p1.y;
+  const x2 = l2.p2.x - l2.p1.x, y2 = l2.p2.y - l2.p1.y;
+
+  // cos( alpha ) = (x1 * x2 + y1 * y2) / ( sqrt(x1*x1 + y1*y1) * sqrt(x2*x2 + y2*y2) )
+
+  let angle = Math.atan2(y2, x2) - Math.atan2(y1, x1);
+  if (angle < 0) { angle += 2 * Math.PI; }
+  return angle;
+}
+
+/**
+ * line touch (any of the points equal)
+ */
+export function lineTouch(l1: ILine, l2: ILine) {
+    return equalPoints(l1.p1, l2.p1) || equalPoints(l1.p1, l2.p2) || equalPoints(l1.p2, l2.p1) || equalPoints(l1.p2, l2.p2);
+  }
+
 /**
  * Are two line segments intersect?
  * Uses the vector cross product approach described below:
  * http://stackoverflow.com/a/565282/786339
  */
-export function segmentsIntersects(p: IPoint, p2: IPoint, q: IPoint, q2: IPoint) {
+export function lineIntersects(l1: ILine, l2: ILine) {
+  const p= l1.p1, p2= l1.p2, q= l2.p1, q2= l2.p2;
   var r = subtractPoints(p2, p);
   var s = subtractPoints(q2, q);
 
@@ -19,7 +46,7 @@ export function segmentsIntersects(p: IPoint, p2: IPoint, q: IPoint, q2: IPoint)
     // They are coLlinear
 
     // Do they touch? (Are any of the points equal?)
-    if (equalPoints(p, q) || equalPoints(p, q2) || equalPoints(p2, q) || equalPoints(p2, q2)) {
+    if (lineTouch(l1, l2)) {
       return true
     }
 
