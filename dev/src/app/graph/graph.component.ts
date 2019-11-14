@@ -73,27 +73,33 @@ export class GraphComponent {
 
   private outline() {
     // take most left point (with min x)
-    const currentPoint = this.points.sort((p1, p2) => p1.x - p2.x)[0];
+    let currentPoint = this.points.sort((p1, p2) => p1.x - p2.x)[0];
 
-    // all point except current
-    let nextPoints = this.points.filter(p => p !== currentPoint);
+    for (let i=0; i<10; i++){
+      // all point except current
+      let nextPoints = this.points.filter(p => p !== currentPoint);
 
-    // remove points not reachable directly (without line cross)
-    nextPoints = nextPoints.filter(p => {
-      const nextLine: ILine = {p1: currentPoint, p2: p};
-      return this.lines.every(l => lineTouch(l, nextLine) || !lineIntersects(l, nextLine));
-    });
-    // this.markerPoints = nextPoints;
+      // remove points not reachable directly (without line cross)
+      nextPoints = nextPoints.filter(p => {
+        const nextLine: ILine = {p1: currentPoint, p2: p};
+        return this.lines.every(l => lineTouch(l, nextLine) || !lineIntersects(l, nextLine));
+      });
+      // this.markerPoints = nextPoints;
 
-    // compare angles between currentPoint.line and line to nextPoint
-    const nextPoint = nextPoints.sort((point1, point2) => {
-      const angle1 = lineAngle(currentPoint.line, {p1: currentPoint, p2: point1});
-      const angle2 = lineAngle(currentPoint.line, {p1: currentPoint, p2: point2});
-      return angle2 - angle1;
-    })[0];
-    const nextLine: ILine = {p1: currentPoint, p2: nextPoint};
-    this.markerPoints = [nextPoint];
-    this.markerLines.push(nextLine);
+      // compare angles between currentPoint.line and line to nextPoint
+      const currentPointLine: ILine = {p1: currentPoint, p2: currentPoint !== currentPoint.line.p1 ?  currentPoint.line.p1 : currentPoint.line.p2};
+      const nextPoint = nextPoints.sort((point1, point2) => {
+        const angle1 = lineAngle(currentPointLine, {p1: currentPoint, p2: point1});
+        const angle2 = lineAngle(currentPointLine, {p1: currentPoint, p2: point2});
+        return angle2 - angle1;
+      })[0];
+      const nextLine: ILine = {p1: currentPoint, p2: nextPoint};
+      this.markerPoints = [nextPoint];
+      this.markerLines.push(nextLine);
+
+      currentPoint = nextPoint;
+    }
+
 
 
     // for (const p of nextPoints) {
