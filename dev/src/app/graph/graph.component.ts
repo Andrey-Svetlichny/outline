@@ -1,5 +1,9 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {doLineSegmentsIntersect, findIntersection, IPoint} from "../math";
+import {
+  IPoint,
+  segmentsIntersectionPoint,
+  segmentsIntersects
+} from "../geometry";
 
 export interface SvgPoint {
   x: number;
@@ -22,7 +26,7 @@ export class GraphComponent {
   public lines: SvgLine[];
   public points: SvgPoint[];
   draggingPoint: {x0: number, y0: number};
-  inters: IPoint;
+  inters: IPoint & any;
 
 
   constructor() {
@@ -65,11 +69,10 @@ export class GraphComponent {
     const p2: IPoint = {x: l1.p2.x, y: l1.p2.y};
     const q: IPoint = {x: l2.p1.x, y: l2.p1.y};
     const q2: IPoint = {x: l2.p2.x, y: l2.p2.y};
-    const res = doLineSegmentsIntersect(p, p2, q, q2);
-    console.log(res);
+    const hasIntersect = segmentsIntersects(p, p2, q, q2);
 
-    const point = findIntersection(p.x,p.y, p2.x,p2.y, q.x,q.y, q2.x,q2.y);
-    this.inters = {x: point[0], y: point[1]};
+    const point = segmentsIntersectionPoint(p.x,p.y, p2.x,p2.y, q.x,q.y, q2.x,q2.y);
+    this.inters = {x: point[0], y: point[1], color: hasIntersect ? 'red' : 'blue'};
     console.log(point);
   }
 }
