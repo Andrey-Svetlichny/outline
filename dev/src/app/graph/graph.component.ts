@@ -47,10 +47,6 @@ export class GraphComponent {
   constructor() {
     const linesData =
     [
-      // [11, 40, 80, 42],
-      // [10, 50, 25, 15],
-
-
       [11, 40, 80, 42],
       [10, 50, 90, 53],
       [25, 25, 60, 90],
@@ -74,6 +70,16 @@ export class GraphComponent {
     const point = this.points[id];
     this.draggingPoint = {x0: point.x, y0: point.y};
     // console.log(point.x, point.y, point.line);
+
+/*
+    const intersectionPoints: IPoint[] = this.intersectionPoints(this.lines);
+    const allPoints: IPoint[] = [...this.points, ...intersectionPoints];
+
+    const points = this.visiblePoints(point, allPoints, this.lines);
+    this.markerPoints = [];
+    this.addMarkerPoints(points);
+*/
+
   }
 
   svgDrag = (id: string, x: number, y: number) => {
@@ -83,8 +89,6 @@ export class GraphComponent {
   }
 
   svgDragEnd = () => {
-    // this.checkIntersect();
-    this.outline();
   }
 
   private checkIntersect() {
@@ -102,25 +106,40 @@ export class GraphComponent {
     console.log(dist);
   }
 
+
+  // find lines intersection points
+  private intersectionPoints(lines: ILine[]): IPoint[] {
+    const result: IPoint[] = [];
+    const ln = [...lines];
+    while (ln.length > 0) {
+      const line = ln.pop()
+      const intersectLines = ln.filter(l => lineIntersects(l, line));
+      const intersectPoints = intersectLines.map(l => lineIntersectionPoint(l, line));
+      result.push(...intersectPoints);
+    }
+    return result;
+  }
+
+  // find points visible from viewPoint (not behind any line)
+  private visiblePoints(viewPoint: IPoint, points: IPoint[], lines: ILine[]): IPoint[] {
+    const result: IPoint[] = [];
+    for (const p of points) {
+      const nextLine: ILine = {p1: viewPoint, p2: p};
+      if (lines.every(l => !lineIntersects(l, nextLine))) {
+        result.push(p);
+      }
+    }
+    return result;
+  }
+
   private outline() {
     // take most left point (with min x)
     const firstPoint = this.points.sort((p1, p2) => p1.x - p2.x)[0];
     let currentPoint = firstPoint;
     let currentLine: ILine = {p1: currentPoint, p2: currentPoint !== currentPoint.line.p1 ?  currentPoint.line.p1 : currentPoint.line.p2};
 
-    const intersectionPoints: IPoint[] = [];
-    { // find intersection points
-      const lines = [...this.lines];
-      while (lines.length > 0) {
-        const line = lines.pop()
-        const intersectLines = lines.filter(l => lineIntersects(l, line));
-        const intersectPoints = intersectLines.map(l => {
-          const point: SvgPoint = lineIntersectionPoint(l, line);
-          return point;
-        });
-        intersectionPoints.push(...intersectPoints);
-      }
-    }
+    // find intersection points
+    const intersectionPoints: IPoint[] = this.intersectionPoints(this.lines);
 
     // allPoints = this.points + intersection points
     let allPoints: IPoint[] = [...this.points, ...intersectionPoints];
@@ -128,41 +147,11 @@ export class GraphComponent {
     let step = 0; let showState = false;
     while (true) {
       step++;
-      // all point except current
+      // all points except current
       let nextPoints = allPoints.filter(p => p !== currentPoint);
 
-
       // remove points not reachable directly (without line cross)
-/*
-      nextPoints = nextPoints.filter(p => {
-        const nextLine: ILine = {p1: currentPoint, p2: p};
-        return this.lines.every(l => !lineIntersects(l, nextLine));
-      });
-*/
-
-      const filteredPoints: IPoint[] = [];
-      let i = 0;
-      for (const p of nextPoints) {
-        i++;
-        showState = step == 1 && i == 1;
-
-        const nextLine: ILine = {p1: currentPoint, p2: p};
-        const lineInters = this.lines.filter(l => lineIntersects(l, nextLine));
-        if (lineInters.length == 0) {
-          filteredPoints.push(p);
-        }
-
-        // if (showState) {
-        //   this.addMarkerPoints([currentPoint], 'blue');
-        //   this.addMarkerLines([nextLine], 'green');
-        //   this.addMarkerLines(lineInters);
-        //   this.addMarkerPoints([p]);
-        //   return;
-        // }
-
-      }
-      nextPoints = filteredPoints;
-
+      nextPoints = this.visiblePoints(currentPoint, nextPoints, this.lines);
 
       // compare angles between currentPoint.line and line to nextPoint
       const nextPoint = nextPoints.sort((point1, point2) => {
@@ -176,19 +165,17 @@ export class GraphComponent {
       this.addMarkerLines([nextLine], 'blue');
 
 
-      if (step == 2) {
-        // this.addMarkerPoints([currentPoint], 'blue');
-        this.addMarkerPoints(nextPoints, 'orange');
-        break;
-      }
+      // if (step == 2) {
+      //   this.addMarkerPoints([currentPoint], 'blue');
+      //   this.addMarkerPoints(nextPoints, 'orange');
+      //   break;
+      // }
 
       currentPoint = nextPoint;
-
       if (nextPoint === firstPoint)
         break;
 
     }
-
   }
 
   private addMarkerPoints(points: IPoint[], color: string = 'red') {
