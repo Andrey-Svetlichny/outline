@@ -50,7 +50,45 @@ export function pointToLineDistance(p: IPoint, line: ILine) {
  * Are two line segments intersect?
  * Uses the vector cross product approach described below:
  * http://stackoverflow.com/a/565282/786339
+ * assume collinear line not cross
  */
+export function lineIntersects(l1: ILine, l2: ILine) {
+  const p= l1.p1, p2= l1.p2, q= l2.p1, q2= l2.p2;
+  var r = subtractPoints(p2, p);
+  var s = subtractPoints(q2, q);
+
+  var uNumerator = crossProduct(subtractPoints(q, p), r);
+  var denominator = crossProduct(r, s);
+
+    if (denominator == 0) {
+    // lines are parallel
+    return false;
+  }
+
+  var u = uNumerator / denominator;
+  var t = crossProduct(subtractPoints(q, p), s) / denominator;
+
+  const eps = 10*Number.EPSILON;
+  if(
+    Math.abs(u) < eps ||
+    Math.abs(u-1) < eps ||
+    Math.abs(t) < eps ||
+    Math.abs(t-1) < eps
+  ) {
+    // just touch
+    return false;
+  }
+
+
+  // if (u==0 || u==1 || t==0 || t==1) {
+  //   // just touch
+  //   return false;
+  // }
+
+  return (t >= 0) && (t <= 1) && (u >= 0) && (u <= 1);
+}
+
+/*
 export function lineIntersects(l1: ILine, l2: ILine) {
   const p= l1.p1, p2= l1.p2, q= l2.p1, q2= l2.p2;
   var r = subtractPoints(p2, p);
@@ -83,6 +121,7 @@ export function lineIntersects(l1: ILine, l2: ILine) {
   return (t >= 0) && (t <= 1) && (u >= 0) && (u <= 1);
 }
 
+*/
 
 export function lineIntersectionPoint(l1: ILine, l2: ILine): IPoint {
   const x1=l1.p1.x, y1=l1.p1.y, x2=l1.p2.x, y2=l1.p2.y, x3=l2.p1.x, y3=l2.p1.y, x4=l2.p2.x, y4=l2.p2.y;

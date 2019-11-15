@@ -5,9 +5,9 @@
         attr.x1="{{l.p1.x}}" attr.y1="{{l.p1.y}}" attr.x2="{{l.p2.x}}" attr.y2="{{l.p2.y}}" stroke="black" stroke-width="0.3" />
 
   <ellipse *ngFor="let p of markerPoints; let id = index"
-    attr.cx="{{p.x}}" attr.cy="{{p.y}}" rx="1" ry="1" fill="red" fill-opacity="0.5" />
+    attr.cx="{{p.x}}" attr.cy="{{p.y}}" rx="1" ry="1" attr.fill="{{p.color || 'red'}}" fill-opacity="0.5" />
   <line *ngFor="let l of markerLines; let id = index"
-        attr.x1="{{l.p1.x}}" attr.y1="{{l.p1.y}}" attr.x2="{{l.p2.x}}" attr.y2="{{l.p2.y}}" stroke="red" stroke-width="0.3" stroke-opacity="0.5"  />
+        attr.x1="{{l.p1.x}}" attr.y1="{{l.p1.y}}" attr.x2="{{l.p2.x}}" attr.y2="{{l.p2.y}}" attr.stroke="{{l.color}}" stroke-width="0.3" stroke-opacity="0.7"  />
 
   <ellipse *ngIf="inters" attr.cx="{{inters.x}}" attr.cy="{{inters.y}}" rx="1" ry="1" attr.fill="{{inters.color}}" fill-opacity="0.3" />
 

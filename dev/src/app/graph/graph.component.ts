@@ -2,11 +2,26 @@ import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {
   ILine,
   IPoint, lineAngle, lineIntersects, lineTouch,
-  segmentsIntersectionPoint
+  lineIntersectionPoint, pointToLineDistance
 } from "../geometry";
+
+export interface IMarkerPoint extends IPoint{
+  color: string;
+}
+export interface IMarkerLine extends ILine{
+  color: string;
+}
+
+// export interface IFPoint extends IPoint {
+//   line: ILine;
+// }
+// export interface IFLine extends ILine {
+//   line: ILine;
+// }
 
 export interface SvgPoint extends IPoint{
   line?: SvgLine;
+  // allLines: SvgLine[];
 }
 export interface SvgLine {
   p1: SvgPoint;
@@ -21,24 +36,36 @@ export interface SvgLine {
 })
 export class GraphComponent {
 
-  public lines: SvgLine[];
-  public points: SvgPoint[];
+  public lines: SvgLine[] = [];
+  public points: SvgPoint[] = [];
   draggingPoint: {x0: number, y0: number};
   inters: IPoint & any;
-  public markerPoints: IPoint[] = [];
-  public markerLines: ILine[] = [];
+  public markerPoints: IMarkerPoint[] = [];
+  public markerLines: IMarkerLine[] = [];
 
 
   constructor() {
-    this.lines = [
-      {p1: {x: 11, y: 40, line: null}, p2: {x: 80, y: 42}},
-      {p1: {x: 10, y: 50}, p2: {x: 90, y: 53}},
-      {p1: {x: 25, y: 25}, p2: {x: 60, y: 90}},
-      {p1: {x: 25, y: 15}, p2: {x: 60, y: 80}},
-      {p1: {x: 25, y:  5}, p2: {x: 60, y: 70}}
+    const linesData =
+    [
+      // [11, 40, 80, 42],
+      // [10, 50, 25, 15],
+
+
+      [11, 40, 80, 42],
+      [10, 50, 90, 53],
+      [25, 25, 60, 90],
+      [25, 15, 60, 80],
+      [25,  5, 60, 70]
     ];
-    this.lines.forEach(l => {l.p1.line = l; l.p2.line = l;});
-    this.points = [].concat(...this.lines.map(l => [l.p1, l.p2]));
+    for (const r of linesData) {
+      const p1: SvgPoint = {x:r[0], y:r[1]/*, allLines:[]*/};
+      const p2: SvgPoint = {x:r[2], y:r[3]/*, allLines:[]*/};
+      const l: SvgLine = {p1, p2};
+      p1.line = l;
+      p2.line = l;
+      this.lines.push(l);
+      this.points.push(p1, p2);
+    }
 
     this.outline();
   }
@@ -56,7 +83,8 @@ export class GraphComponent {
   }
 
   svgDragEnd = () => {
-    this.checkIntersect();
+    // this.checkIntersect();
+    this.outline();
   }
 
   private checkIntersect() {
@@ -64,80 +92,111 @@ export class GraphComponent {
     const l2 = this.lines[1];
     const hasIntersect = lineIntersects(l1, l2);
 
-    this.inters = segmentsIntersectionPoint(l1.p1, l1.p2, l2.p1, l2.p2);
+    this.inters = lineIntersectionPoint(l1, l2);
     this.inters.color = hasIntersect ? 'red' : 'blue';
 
     const angle = lineAngle(l1, l2);
-    console.log(angle);
+    // console.log(angle);
+
+    const dist = pointToLineDistance(l1.p1, l2);
+    console.log(dist);
   }
 
   private outline() {
     // take most left point (with min x)
-    let currentPoint = this.points.sort((p1, p2) => p1.x - p2.x)[0];
+    const firstPoint = this.points.sort((p1, p2) => p1.x - p2.x)[0];
+    let currentPoint = firstPoint;
+    let currentLine: ILine = {p1: currentPoint, p2: currentPoint !== currentPoint.line.p1 ?  currentPoint.line.p1 : currentPoint.line.p2};
 
-    for (let i=0; i<10; i++){
+    const intersectionPoints: IPoint[] = [];
+    { // find intersection points
+      const lines = [...this.lines];
+      while (lines.length > 0) {
+        const line = lines.pop()
+        const intersectLines = lines.filter(l => lineIntersects(l, line));
+        const intersectPoints = intersectLines.map(l => {
+          const point: SvgPoint = lineIntersectionPoint(l, line);
+          return point;
+        });
+        intersectionPoints.push(...intersectPoints);
+      }
+    }
+
+    // allPoints = this.points + intersection points
+    let allPoints: IPoint[] = [...this.points, ...intersectionPoints];
+
+    let step = 0; let showState = false;
+    while (true) {
+      step++;
       // all point except current
-      let nextPoints = this.points.filter(p => p !== currentPoint);
+      let nextPoints = allPoints.filter(p => p !== currentPoint);
+
 
       // remove points not reachable directly (without line cross)
+/*
       nextPoints = nextPoints.filter(p => {
         const nextLine: ILine = {p1: currentPoint, p2: p};
-        return this.lines.every(l => lineTouch(l, nextLine) || !lineIntersects(l, nextLine));
+        return this.lines.every(l => !lineIntersects(l, nextLine));
       });
-      // this.markerPoints = nextPoints;
-
-      // compare angles between currentPoint.line and line to nextPoint
-      const currentPointLine: ILine = {p1: currentPoint, p2: currentPoint !== currentPoint.line.p1 ?  currentPoint.line.p1 : currentPoint.line.p2};
-      const nextPoint = nextPoints.sort((point1, point2) => {
-        const angle1 = lineAngle(currentPointLine, {p1: currentPoint, p2: point1});
-        const angle2 = lineAngle(currentPointLine, {p1: currentPoint, p2: point2});
-        return angle2 - angle1;
-      })[0];
-      const nextLine: ILine = {p1: currentPoint, p2: nextPoint};
-      this.markerPoints = [nextPoint];
-      this.markerLines.push(nextLine);
-
-      currentPoint = nextPoint;
-    }
-
-
-
-    // for (const p of nextPoints) {
-    //   const nextLine: ILine = {p1: currentPoint, p2: p};
-    //   this.markerLines.push(nextLine);
-    //   this.markerLines.push(currentPoint.line);
-    //   const angle = lineAngle(currentPoint.line, nextLine);
-    //   console.log(angle);
-    //
-    //   // break;
-    // }
-
-/*
-    // same as above: remove points not reachable directly (without line cross)
-    let nextPoints2: IPoint[] = [];
-
-    for (const p of nextPoints) {
-      const nextLine: ILine = {p1: currentPoint, p2: p};
-      this.markerLines.push(nextLine);
-      let nextPointOk = true;
-      for (const ln of this.lines) {
-        const touch = lineTouch(nextLine, ln);
-        const intersects = lineIntersects(nextLine, ln);
-        console.log('touch=', touch, 'intersects=', intersects);
-        if (!touch && intersects) {
-          nextPointOk = false;
-          this.markerLines.push(ln);
-        }
-
-      }
-      if (nextPointOk) {
-        nextPoints2.push(p);
-      }
-
-    }
 */
 
+      const filteredPoints: IPoint[] = [];
+      let i = 0;
+      for (const p of nextPoints) {
+        i++;
+        showState = step == 1 && i == 1;
 
+        const nextLine: ILine = {p1: currentPoint, p2: p};
+        const lineInters = this.lines.filter(l => lineIntersects(l, nextLine));
+        if (lineInters.length == 0) {
+          filteredPoints.push(p);
+        }
+
+        // if (showState) {
+        //   this.addMarkerPoints([currentPoint], 'blue');
+        //   this.addMarkerLines([nextLine], 'green');
+        //   this.addMarkerLines(lineInters);
+        //   this.addMarkerPoints([p]);
+        //   return;
+        // }
+
+      }
+      nextPoints = filteredPoints;
+
+
+      // compare angles between currentPoint.line and line to nextPoint
+      const nextPoint = nextPoints.sort((point1, point2) => {
+        const angle1 = lineAngle(currentLine, {p1: currentPoint, p2: point1});
+        const angle2 = lineAngle(currentLine, {p1: currentPoint, p2: point2});
+        return angle2 - angle1;
+      })[0];
+
+      const nextLine: ILine = {p1: currentPoint, p2: nextPoint};
+      currentLine = nextLine;
+      this.addMarkerLines([nextLine], 'blue');
+
+
+      if (step == 2) {
+        // this.addMarkerPoints([currentPoint], 'blue');
+        this.addMarkerPoints(nextPoints, 'orange');
+        break;
+      }
+
+      currentPoint = nextPoint;
+
+      if (nextPoint === firstPoint)
+        break;
+
+    }
 
   }
+
+  private addMarkerPoints(points: IPoint[], color: string = 'red') {
+    this.markerPoints = [...this.markerPoints, ...points.map(p => ({x: p.x, y: p.y, color: color}))];
+  }
+
+  private addMarkerLines(lines: ILine[], color: string = 'red') {
+    this.markerLines = [...this.markerLines, ...lines.map(l => ({p1: l.p1, p2: l.p2, color}))];
+  }
+
 }
