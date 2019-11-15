@@ -8,6 +8,8 @@ export interface ILine {
   p2: IPoint;
 }
 
+export const EPSILON: number = 1e-5;
+
 /**
  * Angle between 2 vectors
  */
@@ -49,6 +51,7 @@ export function pointToLineDistance(p: IPoint, line: ILine) {
   return Math.sqrt(distToSegmentSquared(p, v, w));
 }
 
+
 /**
  * Are two line segments intersect?
  * Uses the vector cross product approach described below:
@@ -59,12 +62,11 @@ export function lineIntersects(l1: ILine, l2: ILine) {
   const p= l1.p1, p2= l1.p2, q= l2.p1, q2= l2.p2;
   const r = subtractPoints(p2, p);
   const s = subtractPoints(q2, q);
-  const eps: number = 1e-5;
 
   const uNumerator = crossProduct(subtractPoints(q, p), r);
   const denominator = crossProduct(r, s);
 
-  if (Math.abs(denominator) < eps) {
+  if (Math.abs(denominator) < EPSILON) {
     // lines are parallel
     return false;
   }
@@ -73,10 +75,10 @@ export function lineIntersects(l1: ILine, l2: ILine) {
   const t = crossProduct(subtractPoints(q, p), s) / denominator;
 
   if(
-    Math.abs(u) < eps ||
-    Math.abs(u-1) < eps ||
-    Math.abs(t) < eps ||
-    Math.abs(t-1) < eps
+    Math.abs(u) < EPSILON ||
+    Math.abs(u-1) < EPSILON ||
+    Math.abs(t) < EPSILON ||
+    Math.abs(t-1) < EPSILON
   ) {
     // just touch
     return false;

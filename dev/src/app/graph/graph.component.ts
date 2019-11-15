@@ -2,7 +2,7 @@ import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {
   ILine,
   IPoint, lineAngle, lineIntersects, lineTouch,
-  lineIntersectionPoint, pointToLineDistance
+  lineIntersectionPoint, pointToLineDistance, EPSILON
 } from "../geometry";
 
 export interface IMarkerPoint extends IPoint{
@@ -58,7 +58,7 @@ export class GraphComponent {
       this.points.push(p1, p2);
     }
 
-    this.outline();
+    this.closestOutline();
     // this.testVisiblePoints();
     // this.testAngle();
   }
@@ -86,7 +86,7 @@ export class GraphComponent {
   }
 
   svgDragEnd = () => {
-    // this.outline();
+    this.closestOutline();
 
 /*
     // test angle
@@ -169,7 +169,10 @@ export class GraphComponent {
     this.addMarkerPoints(result);
   }
 
-  private outline() {
+  private closestOutline() {
+    this.markerPoints = [];
+    this.markerLines = [];
+
     // take most left point (with min x)
     const firstPoint = this.points.sort((p1, p2) => p1.x - p2.x)[0];
     let currentPoint = firstPoint;
@@ -181,25 +184,15 @@ export class GraphComponent {
     // allPoints = this.points + intersection points
     let allPoints: IGPoint[] = [...this.points, ...intersectionPoints];
 
-
     const outlinePoints: IGPoint[] = []
 
-//8
-    for (let i=26; i>0; i--)
+    while (true)
     {
-      console.log(i);
-      this.markerPoints = [];
-      this.markerLines = [];
-
       // all points except current
       let nextPoints: IGPoint[] = allPoints.filter(p => p !== currentPoint);
 
       // remove points not reachable directly (without line cross)
-      // if (i == 1) debugger;
       nextPoints = this.visiblePoints(currentPoint, nextPoints, this.lines);
-
-      this.addMarkerPoints([currentPoint], 'blue');
-      this.addMarkerPoints(nextPoints, 'orange');
 
       // on every currentPoint.lines put vectors from currentPoint
       let vectorsFromCurrentPoint: ILine[] = [];
@@ -211,110 +204,28 @@ export class GraphComponent {
         vectorsFromCurrentPoint.push(...vectors);
       }
 
-      // if more then 1 line, remove line to previous point
+      // if more then 1 vector, remove vector to previous point (or over previous point)
       if (vectorsFromCurrentPoint.length > 1) {
-        const prevPoint = currentLine.p1;
-
-        // if (i==1) debugger;
-        const dist = vectorsFromCurrentPoint.map(v => pointToLineDistance(prevPoint, v));
-        const vectorsFromCurrentPointFilt = vectorsFromCurrentPoint.filter(v => pointToLineDistance(prevPoint, v) > 0.0001);
-
-        vectorsFromCurrentPoint = vectorsFromCurrentPointFilt;
-        // vectorsFromCurrentPoint = vectorsFromCurrentPoint.filter(v => v.p2 !== currentLine.p1);
+        vectorsFromCurrentPoint = vectorsFromCurrentPoint.filter(v => pointToLineDistance(currentLine.p1, v) > EPSILON);
       }
-
-      // this.addMarkerLines(vectorsFromCurrentPoint);
-
-/*
-      if (i == 1) {
-        const v = vectorsFromCurrentPoint[1];
-        const angle = lineAngle(currentLine, v);
-        console.log(angle);
-        this.addMarkerLines([currentLine], 'green');
-        this.addMarkerLines([v]);
-      }
-*/
-
 
       // sort by angle relative to currentLine, take first
       const nextVector = vectorsFromCurrentPoint.map(v => ({v, angle: lineAngle(currentLine, v)}))
         .sort((o1, o2) => o1.angle - o2.angle )[0].v;
 
       // take one of nextPoints, nearest to nextVector
-      let nextPoint = nextPoints.map(p => ({point: p, dist: pointToLineDistance(p, nextVector)}))
-        .sort((o1,o2) => o1.dist-o2.dist)[0].point;
+      const nextPoint = nextPoints.map(p => ({point: p, dist: pointToLineDistance(p, nextVector)}))
+        .sort((o1, o2) => o1.dist - o2.dist)[0].point;
 
       const nextLine = {p1: currentPoint, p2: nextPoint};
-
-      this.addMarkerPoints([nextPoint], 'red');
-      this.addMarkerLines([nextLine]);
-      this.addMarkerLines([currentLine], 'green');
-
       outlinePoints.push(nextPoint);
-      currentPoint = nextPoint;
-      currentLine = nextLine;
-    }
-
-
-
-
-
-
-
-
-
-/*
-    let step = 0; let showState = false;
-    while (true) {
-      step++;
-      // all points except current
-      let nextPoints = allPoints.filter(p => p !== currentPoint);
-
-      // remove points not reachable directly (without line cross)
-      nextPoints = this.visiblePoints(currentPoint, nextPoints, this.lines);
-
-      this.markerPoints = [];
-      this.markerLines = [];
-      this.addMarkerPoints([currentPoint], 'blue');
-      this.addMarkerPoints(nextPoints, 'orange');
-      this.addMarkerLines([currentLine]);
-
-      const nextPoint = nextPoints[0];
-      const nextLine: ILine = {p1: currentPoint, p2: nextPoint};
-
-      this.addMarkerPoints([nextPoint], 'green');
-      this.addMarkerLines([nextLine], 'green');
-
-      const angle = lineAngle(currentLine, nextLine)
-      console.log(angle);
-
-
-/!*
-      // compare angles between currentPoint.line and line to nextPoint
-      const nextPoint = nextPoints.sort((point1, point2) => {
-        const angle1 = lineAngle(currentLine, {p1: currentPoint, p2: point1});
-        const angle2 = lineAngle(currentLine, {p1: currentPoint, p2: point2});
-        return angle2 - angle1;
-      })[0];
-
-      const nextLine: ILine = {p1: currentPoint, p2: nextPoint};
-      currentLine = nextLine;
-      this.addMarkerLines([nextLine], 'blue');
-
-
-      // if (step == 2) {
-      //   this.addMarkerPoints([currentPoint], 'blue');
-      //   this.addMarkerPoints(nextPoints, 'orange');
-      //   break;
-      // }
+      this.addMarkerLines([nextLine]);
 
       currentPoint = nextPoint;
-*!/
-      // if (nextPoint === firstPoint)
+      currentLine = nextLine;
+      if (nextPoint === firstPoint)
         break;
-
     }
-*/
   }
 
   private addMarkerPoints(points: IPoint[], color: string = 'red') {
