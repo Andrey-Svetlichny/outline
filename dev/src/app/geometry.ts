@@ -54,21 +54,21 @@ export function pointToLineDistance(p: IPoint, line: ILine) {
  */
 export function lineIntersects(l1: ILine, l2: ILine) {
   const p= l1.p1, p2= l1.p2, q= l2.p1, q2= l2.p2;
-  var r = subtractPoints(p2, p);
-  var s = subtractPoints(q2, q);
+  const r = subtractPoints(p2, p);
+  const s = subtractPoints(q2, q);
+  const eps: number = 1e-5;
 
-  var uNumerator = crossProduct(subtractPoints(q, p), r);
-  var denominator = crossProduct(r, s);
+  const uNumerator = crossProduct(subtractPoints(q, p), r);
+  const denominator = crossProduct(r, s);
 
-    if (denominator == 0) {
+  if (Math.abs(denominator) < eps) {
     // lines are parallel
     return false;
   }
 
-  var u = uNumerator / denominator;
-  var t = crossProduct(subtractPoints(q, p), s) / denominator;
+  const u = uNumerator / denominator;
+  const t = crossProduct(subtractPoints(q, p), s) / denominator;
 
-  const eps = 10*Number.EPSILON;
   if(
     Math.abs(u) < eps ||
     Math.abs(u-1) < eps ||
@@ -78,12 +78,6 @@ export function lineIntersects(l1: ILine, l2: ILine) {
     // just touch
     return false;
   }
-
-
-  // if (u==0 || u==1 || t==0 || t==1) {
-  //   // just touch
-  //   return false;
-  // }
 
   return (t >= 0) && (t <= 1) && (u >= 0) && (u <= 1);
 }

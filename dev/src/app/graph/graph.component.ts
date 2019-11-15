@@ -59,6 +59,7 @@ export class GraphComponent {
     }
 
     this.outline();
+    // this.testVisiblePoints();
   }
 
   svgSelect = (id: string) => {
@@ -135,6 +136,18 @@ export class GraphComponent {
     return line.p1 === point ? line.p2 : line.p1;
   }
 
+  private testVisiblePoints() {
+    const intersectionPoints: IGPoint[] = this.intersectionPoints(this.lines);
+    let allPoints: IGPoint[] = [...this.points, ...intersectionPoints];
+    const viewPoint = intersectionPoints[4];
+    const points = allPoints.filter(p => p !== viewPoint);
+
+    const result = this.visiblePoints(viewPoint, points, this.lines);
+    this.addMarkerPoints([viewPoint], 'blue');
+    this.addMarkerPoints(points, 'orange');
+    this.addMarkerPoints(result);
+  }
+
   private outline() {
     // take most left point (with min x)
     const firstPoint = this.points.sort((p1, p2) => p1.x - p2.x)[0];
@@ -151,16 +164,18 @@ export class GraphComponent {
     const outlinePoints: IGPoint[] = []
 
 
-    for (let i=0; i<6; i++)
+    for (let i=7; i>0; i--)
     {
+      this.markerPoints = [];
+      this.markerLines = [];
+
       // all points except current
       let nextPoints: IGPoint[] = allPoints.filter(p => p !== currentPoint);
 
       // remove points not reachable directly (without line cross)
+      // if (i == 1) debugger;
       nextPoints = this.visiblePoints(currentPoint, nextPoints, this.lines);
 
-      this.markerPoints = [];
-      this.markerLines = [];
       this.addMarkerPoints([currentPoint], 'blue');
       this.addMarkerPoints(nextPoints, 'orange');
 
@@ -186,17 +201,14 @@ export class GraphComponent {
         .sort((o1,o2) => o1.dist-o2.dist)[0].point;
 
       const nextLine = {p1: currentPoint, p2: nextPoint};
+
+      this.addMarkerPoints([nextPoint], 'red');
       this.addMarkerLines([nextLine]);
-      this.addMarkerPoints([nextPoint]);
+      this.addMarkerLines([currentLine], 'green');
 
       outlinePoints.push(nextPoint);
       currentPoint = nextPoint;
       currentLine = nextLine;
-
-      // this.addMarkerPoints([nextPoint], 'red');
-      // this.addMarkerLines([nextLine]);
-      // this.addMarkerLines([currentLine], 'green');
-
     }
 
 
