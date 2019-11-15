@@ -184,9 +184,10 @@ export class GraphComponent {
 
     const outlinePoints: IGPoint[] = []
 
-
-    for (let i=7; i>0; i--)
+//8
+    for (let i=26; i>0; i--)
     {
+      console.log(i);
       this.markerPoints = [];
       this.markerLines = [];
 
@@ -209,9 +210,20 @@ export class GraphComponent {
             : [{p1: currentPoint, p2: line.p1}, {p1: currentPoint, p2: line.p2}];
         vectorsFromCurrentPoint.push(...vectors);
       }
-      // remove line to previous point
-      vectorsFromCurrentPoint = vectorsFromCurrentPoint.filter(v => v.p2 !== currentLine.p1);
-      // this.addMarkerLines(vectorsFromCurrentPoint.map(v => v.vector));
+
+      // if more then 1 line, remove line to previous point
+      if (vectorsFromCurrentPoint.length > 1) {
+        const prevPoint = currentLine.p1;
+
+        // if (i==1) debugger;
+        const dist = vectorsFromCurrentPoint.map(v => pointToLineDistance(prevPoint, v));
+        const vectorsFromCurrentPointFilt = vectorsFromCurrentPoint.filter(v => pointToLineDistance(prevPoint, v) > 0.0001);
+
+        vectorsFromCurrentPoint = vectorsFromCurrentPointFilt;
+        // vectorsFromCurrentPoint = vectorsFromCurrentPoint.filter(v => v.p2 !== currentLine.p1);
+      }
+
+      // this.addMarkerLines(vectorsFromCurrentPoint);
 
 /*
       if (i == 1) {
