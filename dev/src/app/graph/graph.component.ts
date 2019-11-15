@@ -12,20 +12,14 @@ export interface IMarkerLine extends ILine{
   color: string;
 }
 
-// export interface IFPoint extends IPoint {
-//   line: ILine;
-// }
-// export interface IFLine extends ILine {
-//   line: ILine;
-// }
-
-export interface SvgPoint extends IPoint{
-  line?: SvgLine;
-  // allLines: SvgLine[];
+// graph point
+export interface IGPoint extends IPoint{
+  line?: IGLine;
+  allLines: IGLine[];
 }
-export interface SvgLine {
-  p1: SvgPoint;
-  p2: SvgPoint;
+export interface IGLine {
+  p1: IGPoint;
+  p2: IGPoint;
 }
 
 // noinspection UnterminatedStatementJS
@@ -36,8 +30,8 @@ export interface SvgLine {
 })
 export class GraphComponent {
 
-  public lines: SvgLine[] = [];
-  public points: SvgPoint[] = [];
+  public lines: IGLine[] = [];
+  public points: IGPoint[] = [];
   draggingPoint: {x0: number, y0: number};
   inters: IPoint & any;
   public markerPoints: IMarkerPoint[] = [];
@@ -54,9 +48,9 @@ export class GraphComponent {
       [25,  5, 60, 70]
     ];
     for (const r of linesData) {
-      const p1: SvgPoint = {x:r[0], y:r[1]/*, allLines:[]*/};
-      const p2: SvgPoint = {x:r[2], y:r[3]/*, allLines:[]*/};
-      const l: SvgLine = {p1, p2};
+      const p1: IGPoint = {x:r[0], y:r[1], allLines:[]};
+      const p2: IGPoint = {x:r[2], y:r[3], allLines:[]};
+      const l: IGLine = {p1, p2};
       p1.line = l;
       p2.line = l;
       this.lines.push(l);
