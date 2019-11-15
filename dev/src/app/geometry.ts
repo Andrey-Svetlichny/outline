@@ -15,10 +15,13 @@ export function lineAngle(l1: ILine, l2: ILine) {
   const x1 = l1.p2.x - l1.p1.x, y1 = l1.p2.y - l1.p1.y;
   const x2 = l2.p2.x - l2.p1.x, y2 = l2.p2.y - l2.p1.y;
 
-  // cos( alpha ) = (x1 * x2 + y1 * y2) / ( sqrt(x1*x1 + y1*y1) * sqrt(x2*x2 + y2*y2) )
-
   let angle = Math.atan2(y2, x2) - Math.atan2(y1, x1);
-  // if (angle < 0) { angle += 2 * Math.PI; }
+
+  if (angle > Math.PI) {
+    angle -= 2 * Math.PI;
+  } else if (angle <= -Math.PI) {
+    angle += 2 * Math.PI;
+  }
   return angle;
 }
 
@@ -82,40 +85,6 @@ export function lineIntersects(l1: ILine, l2: ILine) {
   return (t >= 0) && (t <= 1) && (u >= 0) && (u <= 1);
 }
 
-/*
-export function lineIntersects(l1: ILine, l2: ILine) {
-  const p= l1.p1, p2= l1.p2, q= l2.p1, q2= l2.p2;
-  var r = subtractPoints(p2, p);
-  var s = subtractPoints(q2, q);
-
-  var uNumerator = crossProduct(subtractPoints(q, p), r);
-  var denominator = crossProduct(r, s);
-
-  if (uNumerator == 0 && denominator == 0) {
-    // They are coLlinear
-
-    // Do they touch? (Are any of the points equal?)
-    if (lineTouch(l1, l2)) {
-      return true
-    }
-
-    // Do they overlap? (Are all the point differences in either direction the same sign)
-    return !((q.x - p.x < 0) ? (q.x - p2.x < 0) && (q2.x - p.x < 0) && (q2.x - p2.x < 0) : (q.x - p2.x >= 0) && (q2.x - p.x >= 0) && (q2.x - p2.x >= 0))
-      ||   !((q.y - p.y < 0) ? (q.y - p2.y < 0) && (q2.y - p.y < 0) && (q2.y - p2.y < 0) : (q.y - p2.y >= 0) && (q2.y - p.y >= 0) && (q2.y - p2.y >= 0));
-  }
-
-  if (denominator == 0) {
-    // lines are paralell
-    return false;
-  }
-
-  var u = uNumerator / denominator;
-  var t = crossProduct(subtractPoints(q, p), s) / denominator;
-
-  return (t >= 0) && (t <= 1) && (u >= 0) && (u <= 1);
-}
-
-*/
 
 export function lineIntersectionPoint(l1: ILine, l2: ILine): IPoint {
   const x1=l1.p1.x, y1=l1.p1.y, x2=l1.p2.x, y2=l1.p2.y, x3=l2.p1.x, y3=l2.p1.y, x4=l2.p2.x, y4=l2.p2.y;

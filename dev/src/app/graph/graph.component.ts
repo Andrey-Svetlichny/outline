@@ -60,6 +60,7 @@ export class GraphComponent {
 
     this.outline();
     // this.testVisiblePoints();
+    // this.testAngle();
   }
 
   svgSelect = (id: string) => {
@@ -85,7 +86,16 @@ export class GraphComponent {
   }
 
   svgDragEnd = () => {
-    this.outline();
+    // this.outline();
+
+/*
+    // test angle
+    const l1 = this.markerLines[0];
+    const l2 = this.markerLines[1];
+    const angle = lineAngle(l1, l2);
+    console.log(angle);
+*/
+
   }
 
   private checkIntersect() {
@@ -134,6 +144,17 @@ export class GraphComponent {
 
   private lineOtherPoint(line: ILine, point: IPoint): IPoint {
     return line.p1 === point ? line.p2 : line.p1;
+  }
+
+  private testAngle() {
+    const p1: IGPoint = {x: 10, y: 50, lines: []};
+    const p2: IGPoint = {x: 50, y: 50, lines: []};
+    const p3: IGPoint = {x: 70, y: 30, lines: []};
+    const l1: IGLine = {p1, p2};
+    const l2: IGLine = {p1: p2, p2: p3};
+    this.addMarkerLines([l1,l2]);
+    this.lines = [];
+    this.points = [p1, p2, p3];
   }
 
   private testVisiblePoints() {
@@ -191,6 +212,17 @@ export class GraphComponent {
       // remove line to previous point
       vectorsFromCurrentPoint = vectorsFromCurrentPoint.filter(v => v.p2 !== currentLine.p1);
       // this.addMarkerLines(vectorsFromCurrentPoint.map(v => v.vector));
+
+/*
+      if (i == 1) {
+        const v = vectorsFromCurrentPoint[1];
+        const angle = lineAngle(currentLine, v);
+        console.log(angle);
+        this.addMarkerLines([currentLine], 'green');
+        this.addMarkerLines([v]);
+      }
+*/
+
 
       // sort by angle relative to currentLine, take first
       const nextVector = vectorsFromCurrentPoint.map(v => ({v, angle: lineAngle(currentLine, v)}))
