@@ -18,7 +18,7 @@ export function lineAngle(l1: ILine, l2: ILine) {
   // cos( alpha ) = (x1 * x2 + y1 * y2) / ( sqrt(x1*x1 + y1*y1) * sqrt(x2*x2 + y2*y2) )
 
   let angle = Math.atan2(y2, x2) - Math.atan2(y1, x1);
-  if (angle < 0) { angle += 2 * Math.PI; }
+  // if (angle < 0) { angle += 2 * Math.PI; }
   return angle;
 }
 
