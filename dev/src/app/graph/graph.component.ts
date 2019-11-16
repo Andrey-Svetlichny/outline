@@ -1,17 +1,17 @@
 import {Component, EventEmitter, Input, Output, OnInit} from '@angular/core';
 import {
   ILine, IPoint, lineAngle, lineIntersects, lineIntersectionPoint, pointToLineDistance, EPSILON
-} from "../geometry";
+} from '../geometry';
 
-export interface IMarkerPoint extends IPoint{
+export interface IMarkerPoint extends IPoint {
   color: string;
 }
-export interface IMarkerLine extends ILine{
+export interface IMarkerLine extends ILine {
   color: string;
 }
 
 // graph point
-export interface IGPoint extends IPoint{
+export interface IGPoint extends IPoint {
   x: number;
   y: number;
   lines: IGLine[];
@@ -33,33 +33,56 @@ export class GraphComponent implements OnInit {
   public points: IGPoint[] = []; // dragging handles at the ends of lines
   draggingPoint: {x0: number, y0: number};
   public outlinePoints: IGPoint[] = [];
-  public outlineLines(): IGLine[] {
-    const result: IGLine[] = [];
-    for (let i = 1; i < this.outlinePoints.length; i++) {
-      result.push({p1: this.outlinePoints[i - 1], p2: this.outlinePoints[i]})
-    }
-    return result;
-  }
 
   inters: IPoint & any;
   public markerPoints: IMarkerPoint[] = [];
   public markerLines: IMarkerLine[] = [];
+  private _angle: number;
+  private _distance: number;
 
-  @Input() linesData: string;
+  @Input() set angle(value: number) {
+    this._angle = value;
+    this.calc();
+  }
+  @Input() set distance(value: number) {
+    this._distance = value;
+    this.calc();
+  }
+  @Input() set linesData(value: string) {
+    this.parseLinesData(value);
+    this.calc();
+  }
+  get linesData(): string {
+    return '_linesData';
+  }
+
+  public outlineLines(): IGLine[] {
+    const result: IGLine[] = [];
+    for (let i = 1; i < this.outlinePoints.length; i++) {
+      result.push({p1: this.outlinePoints[i - 1], p2: this.outlinePoints[i]});
+    }
+    return result;
+  }
 
   constructor() {
   }
 
   ngOnInit(): void {
-    this.parseLinesData(this.linesData);
-    this.closestOutline();
-    this.outlineSmooth();
+  }
+
+  private calc() {
+    if (this.lines.length > 0) {
+      this.closestOutline();
+      this.outlineSmooth();
+    }
   }
 
   private parseLinesData(linesData) {
+    this.lines = [];
+    this.points = [];
     for (const r of JSON.parse(linesData)) {
-      const p1: IGPoint = {x:r[0], y:r[1], lines:[]};
-      const p2: IGPoint = {x:r[2], y:r[3], lines:[]};
+      const p1: IGPoint = {x: r[0], y: r[1], lines: []};
+      const p2: IGPoint = {x: r[2], y: r[3], lines: []};
       const l: IGLine = {p1, p2};
       p1.lines = [l];
       p2.lines = [l];
@@ -114,10 +137,10 @@ export class GraphComponent implements OnInit {
     const result: IGPoint[] = [];
     const ln = [...lines];
     while (ln.length > 0) {
-      const line = ln.pop()
+      const line = ln.pop();
       const intersectLines = ln.filter(l => lineIntersects(l, line));
       const intersectPoints = intersectLines.map(l => {
-          let p = lineIntersectionPoint(l, line);
+          const p = lineIntersectionPoint(l, line);
           return {x: p.x, y: p.y, lines: [line, l] };
       });
       result.push(...intersectPoints);
@@ -143,14 +166,14 @@ export class GraphComponent implements OnInit {
     const p3: IGPoint = {x: 70, y: 30, lines: []};
     const l1: IGLine = {p1, p2};
     const l2: IGLine = {p1: p2, p2: p3};
-    this.addMarkerLines([l1,l2]);
+    this.addMarkerLines([l1, l2]);
     this.lines = [];
     this.points = [p1, p2, p3];
   }
 
   private testVisiblePoints() {
     const intersectionPoints: IGPoint[] = this.intersectionPoints(this.lines);
-    let allPoints: IGPoint[] = [...this.points, ...intersectionPoints];
+    const allPoints: IGPoint[] = [...this.points, ...intersectionPoints];
     const viewPoint = intersectionPoints[4];
     const points = allPoints.filter(p => p !== viewPoint);
 
@@ -173,10 +196,9 @@ export class GraphComponent implements OnInit {
     const intersectionPoints: IGPoint[] = this.intersectionPoints(this.lines);
 
     // allPoints = this.points + intersection points
-    let allPoints: IGPoint[] = [...this.points, ...intersectionPoints];
+    const allPoints: IGPoint[] = [...this.points, ...intersectionPoints];
 
-    while (true)
-    {
+    while (true) {
       // all points except current
       let nextPoints: IGPoint[] = allPoints.filter(p => p !== currentPoint);
 
@@ -185,8 +207,8 @@ export class GraphComponent implements OnInit {
 
       // on every currentPoint.lines put vectors from currentPoint
       let vectorsFromCurrentPoint: ILine[] = [];
-      for (let line of currentPoint.lines) {
-        let vectors: ILine[] =
+      for (const line of currentPoint.lines) {
+        const vectors: ILine[] =
           (line.p1 === currentPoint) ? [{p1: line.p1, p2: line.p2}]
             : (line.p2 === currentPoint) ? [{p1: line.p2, p2: line.p1}]
             : [{p1: currentPoint, p2: line.p1}, {p1: currentPoint, p2: line.p2}];
@@ -211,8 +233,9 @@ export class GraphComponent implements OnInit {
 
       currentPoint = nextPoint;
       currentLine = nextLine;
-      if (nextPoint === firstPoint)
+      if (nextPoint === firstPoint) {
         break;
+      }
     }
   }
 
@@ -233,11 +256,16 @@ export class GraphComponent implements OnInit {
 
     const outlinePointsWithIndex: II[] = this.outlinePoints.map((p, index) => ({index, point: p}));
     const currentPoint = outlinePointsWithIndex[n];
-    const distance = 10;
+    const currentLine = currentPoint.point.lines[0];
 
     const nearestLines = this.lines.filter(l => {
       const d = pointToLineDistance(currentPoint.point, l);
-      return EPSILON < d && d < distance;
+      if (d < EPSILON || this._distance < d) {
+        return false;
+      }
+
+      const angle = Math.abs(lineAngle(currentLine, l)) % (Math.PI / 2);
+      return Math.abs(angle) < this._angle;
     });
 
     // next points after currentPoint
@@ -251,15 +279,15 @@ export class GraphComponent implements OnInit {
         break;
       }
       // and belongs to nearestLines
-      if(nearestLines.some(l => pointToLineDistance(point.point,l) < EPSILON)) {
+      if (nearestLines.some(l => pointToLineDistance(point.point, l) < EPSILON)) {
         points.push(outlinePointsWithIndex[i]);
       }
     }
 
     // for every duplicate points keep first
     points = points.filter(pp => {
-      return !points.some(p => p.index < pp.index && p.point == pp.point);
-    })
+      return !points.some(p => p.index < pp.index && p.point === pp.point);
+    });
 
     // last only
     points = points.slice(-1);
@@ -273,7 +301,7 @@ export class GraphComponent implements OnInit {
   }
 
   private addMarkerPoints(points: IPoint[], color: string = 'red') {
-    this.markerPoints = [...this.markerPoints, ...points.map(p => ({x: p.x, y: p.y, color: color}))];
+    this.markerPoints = [...this.markerPoints, ...points.map(p => ({x: p.x, y: p.y, color}))];
   }
 
   private addMarkerLines(lines: ILine[], color: string = 'red') {
