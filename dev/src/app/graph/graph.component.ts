@@ -1,8 +1,6 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {
-  ILine,
-  IPoint, lineAngle, lineIntersects, lineTouch,
-  lineIntersectionPoint, pointToLineDistance, EPSILON
+  ILine, IPoint, lineAngle, lineIntersects, lineIntersectionPoint, pointToLineDistance, EPSILON
 } from "../geometry";
 
 export interface IMarkerPoint extends IPoint{
@@ -154,10 +152,6 @@ export class GraphComponent {
     return result;
   }
 
-  private lineOtherPoint(line: ILine, point: IPoint): IPoint {
-    return line.p1 === point ? line.p2 : line.p1;
-  }
-
   private testAngle() {
     const p1: IGPoint = {x: 10, y: 50, lines: []};
     const p2: IGPoint = {x: 50, y: 50, lines: []};
@@ -238,9 +232,9 @@ export class GraphComponent {
   }
 
   private outlineSmooth() {
-    for (let i=0; i < this.outlinePoints.length; i++) {
-      const p = this.outlinePoints[i];
-      if (this.points.indexOf(p) >= 0) {
+    for (let i = 0; i < this.outlinePoints.length; i++) {
+      // not cross point
+      if (this.points.indexOf(this.outlinePoints[i]) >= 0) {
         this.outlineSmoothOnePoint(i);
       }
     }
@@ -252,64 +246,45 @@ export class GraphComponent {
       point: IGPoint;
     }
 
-    // this.markerLines = [];
-    // this.markerPoints = [];
-    // this.addMarkerPoints([this.outlinePoints[n]], 'blue');
-
     const outlinePointsWithIndex: II[] = this.outlinePoints.map((p, index) => ({index, point: p}));
-
     const currentPoint = outlinePointsWithIndex[n];
-
     const distance = 10;
-
-    const currentLine = this.lines.find(l => pointToLineDistance(currentPoint.point, l) < EPSILON);
 
     const nearestLines = this.lines.filter(l => {
       const d = pointToLineDistance(currentPoint.point, l);
       return EPSILON < d && d < distance;
     });
 
-    // next points after currentPoint directly visible from currentPoint
-    let nextVisiblePoints: II[] = [];
+    // next points after currentPoint
+    let points: II[] = [];
     for (let i = currentPoint.index + 1; i < outlinePointsWithIndex.length; i++) {
       const point = outlinePointsWithIndex[i];
+
+      // directly visible from currentPoint
       const line: ILine = {p1: currentPoint.point, p2: point.point};
       if (this.lines.some(l => lineIntersects(l, line))) {
         break;
       }
       // and belongs to nearestLines
       if(nearestLines.some(l => pointToLineDistance(point.point,l) < EPSILON)) {
-        // console.log(i);
-        nextVisiblePoints.push(outlinePointsWithIndex[i]);
+        points.push(outlinePointsWithIndex[i]);
       }
     }
 
     // for every duplicate points keep first
-    nextVisiblePoints = nextVisiblePoints.filter(pp => {
-      return !nextVisiblePoints.some(p => p.index < pp.index && p.point == pp.point);
+    points = points.filter(pp => {
+      return !points.some(p => p.index < pp.index && p.point == pp.point);
     })
 
     // last only
-    nextVisiblePoints = nextVisiblePoints.slice(-1);
-
-    // this.addMarkerLines(nearestLines);
-    // this.addMarkerPoints(nextVisiblePoints.map(vp => vp.point));
-    // console.log(nextVisiblePoints);
+    points = points.slice(-1);
 
     // remove points between currentPoint and last
-    if (nextVisiblePoints.length > 0) {
+    if (points.length > 0) {
       this.outlinePoints = outlinePointsWithIndex
-        .filter(p => p.index <= currentPoint.index || p.index >= nextVisiblePoints[0].index)
+        .filter(p => p.index <= currentPoint.index || p.index >= points[0].index)
         .map(p => p.point);
     }
-
-
-/*
-    this.addMarkerPoints([currentPoint.point], 'blue');
-    this.addMarkerLines([currentLine], 'blue');
-    this.addMarkerLines(nearestLines);
-*/
-
   }
 
   private addMarkerPoints(points: IPoint[], color: string = 'red') {

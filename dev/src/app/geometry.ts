@@ -27,20 +27,12 @@ export function lineAngle(l1: ILine, l2: ILine) {
   return angle;
 }
 
-/**
- * line touch (any of the points equal)
- */
-export function lineTouch(l1: ILine, l2: ILine) {
-    return equalPoints(l1.p1, l2.p1) || equalPoints(l1.p1, l2.p2) || equalPoints(l1.p2, l2.p1) || equalPoints(l1.p2, l2.p2);
-  }
-
-
 function sqr(x) { return x * x }
 function dist2(v, w) { return sqr(v.x - w.x) + sqr(v.y - w.y) }
 function distToSegmentSquared(p, v, w) {
-  var l2 = dist2(v, w);
+  const l2 = dist2(v, w);
   if (l2 == 0) return dist2(p, v);
-  var t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+  let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
   t = Math.max(0, Math.min(1, t));
   return dist2(p, { x: v.x + t * (w.x - v.x),
     y: v.y + t * (w.y - v.y) });
@@ -74,12 +66,8 @@ export function lineIntersects(l1: ILine, l2: ILine) {
   const u = uNumerator / denominator;
   const t = crossProduct(subtractPoints(q, p), s) / denominator;
 
-  if(
-    Math.abs(u) < EPSILON ||
-    Math.abs(u-1) < EPSILON ||
-    Math.abs(t) < EPSILON ||
-    Math.abs(t-1) < EPSILON
-  ) {
+  if (Math.abs(u) < EPSILON || Math.abs(u - 1) < EPSILON ||
+    Math.abs(t) < EPSILON || Math.abs(t - 1) < EPSILON) {
     // just touch
     return false;
   }
@@ -90,8 +78,8 @@ export function lineIntersects(l1: ILine, l2: ILine) {
 
 export function lineIntersectionPoint(l1: ILine, l2: ILine): IPoint {
   const x1=l1.p1.x, y1=l1.p1.y, x2=l1.p2.x, y2=l1.p2.y, x3=l2.p1.x, y3=l2.p1.y, x4=l2.p2.x, y4=l2.p2.y;
-  const px= ( (x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4) ) / ( (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4) )
-  const py= ( (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4) ) / ( (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4) )
+  const px= ( (x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4) ) / ( (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4) );
+  const py= ( (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4) ) / ( (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4) );
   return {x: px, y: py};
 }
 
