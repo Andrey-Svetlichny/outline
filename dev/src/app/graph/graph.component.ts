@@ -68,8 +68,8 @@ export class GraphComponent {
     }
 
     this.closestOutline();
+    this.outlineSmooth();
 
-    this.outlineLines();
     // this.testVisiblePoints();
     // this.testAngle();
   }
@@ -98,6 +98,7 @@ export class GraphComponent {
 
   svgDragEnd = () => {
     this.closestOutline();
+    this.outlineSmooth();
 
 /*
     // test angle
@@ -234,6 +235,81 @@ export class GraphComponent {
       if (nextPoint === firstPoint)
         break;
     }
+  }
+
+  private outlineSmooth() {
+    for (let i=0; i < this.outlinePoints.length; i++) {
+      const p = this.outlinePoints[i];
+      if (this.points.indexOf(p) >= 0) {
+        this.outlineSmoothOnePoint(i);
+      }
+    }
+  }
+
+  private outlineSmoothOnePoint(n: number) {
+    interface II {
+      index: number;
+      point: IGPoint;
+    }
+
+    // this.markerLines = [];
+    // this.markerPoints = [];
+    // this.addMarkerPoints([this.outlinePoints[n]], 'blue');
+
+    const outlinePointsWithIndex: II[] = this.outlinePoints.map((p, index) => ({index, point: p}));
+
+    const currentPoint = outlinePointsWithIndex[n];
+
+    const distance = 10;
+
+    const currentLine = this.lines.find(l => pointToLineDistance(currentPoint.point, l) < EPSILON);
+
+    const nearestLines = this.lines.filter(l => {
+      const d = pointToLineDistance(currentPoint.point, l);
+      return EPSILON < d && d < distance;
+    });
+
+    // next points after currentPoint directly visible from currentPoint
+    let nextVisiblePoints: II[] = [];
+    for (let i = currentPoint.index + 1; i < outlinePointsWithIndex.length; i++) {
+      const point = outlinePointsWithIndex[i];
+      const line: ILine = {p1: currentPoint.point, p2: point.point};
+      if (this.lines.some(l => lineIntersects(l, line))) {
+        break;
+      }
+      // and belongs to nearestLines
+      if(nearestLines.some(l => pointToLineDistance(point.point,l) < EPSILON)) {
+        // console.log(i);
+        nextVisiblePoints.push(outlinePointsWithIndex[i]);
+      }
+    }
+
+    // for every duplicate points keep first
+    nextVisiblePoints = nextVisiblePoints.filter(pp => {
+      return !nextVisiblePoints.some(p => p.index < pp.index && p.point == pp.point);
+    })
+
+    // last only
+    nextVisiblePoints = nextVisiblePoints.slice(-1);
+
+    // this.addMarkerLines(nearestLines);
+    // this.addMarkerPoints(nextVisiblePoints.map(vp => vp.point));
+    // console.log(nextVisiblePoints);
+
+    // remove points between currentPoint and last
+    if (nextVisiblePoints.length > 0) {
+      this.outlinePoints = outlinePointsWithIndex
+        .filter(p => p.index <= currentPoint.index || p.index >= nextVisiblePoints[0].index)
+        .map(p => p.point);
+    }
+
+
+/*
+    this.addMarkerPoints([currentPoint.point], 'blue');
+    this.addMarkerLines([currentLine], 'blue');
+    this.addMarkerLines(nearestLines);
+*/
+
   }
 
   private addMarkerPoints(points: IPoint[], color: string = 'red') {
