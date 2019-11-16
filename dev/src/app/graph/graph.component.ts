@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Component, EventEmitter, Input, Output, OnInit} from '@angular/core';
 import {
   ILine, IPoint, lineAngle, lineIntersects, lineIntersectionPoint, pointToLineDistance, EPSILON
 } from "../geometry";
@@ -27,10 +27,10 @@ export interface IGLine {
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.css']
 })
-export class GraphComponent {
+export class GraphComponent implements OnInit {
 
   public lines: IGLine[] = [];
-  public points: IGPoint[] = [];
+  public points: IGPoint[] = []; // dragging handles at the ends of lines
   draggingPoint: {x0: number, y0: number};
   public outlinePoints: IGPoint[] = [];
   public outlineLines(): IGLine[] {
@@ -45,17 +45,19 @@ export class GraphComponent {
   public markerPoints: IMarkerPoint[] = [];
   public markerLines: IMarkerLine[] = [];
 
+  @Input() linesData: string;
 
   constructor() {
-    const linesData =
-    [
-      [11, 40, 80, 42],
-      [10, 50, 90, 53],
-      [25, 25, 60, 90],
-      [25, 15, 60, 80],
-      [25,  5, 60, 70]
-    ];
-    for (const r of linesData) {
+  }
+
+  ngOnInit(): void {
+    this.parseLinesData(this.linesData);
+    this.closestOutline();
+    this.outlineSmooth();
+  }
+
+  private parseLinesData(linesData) {
+    for (const r of JSON.parse(linesData)) {
       const p1: IGPoint = {x:r[0], y:r[1], lines:[]};
       const p2: IGPoint = {x:r[2], y:r[3], lines:[]};
       const l: IGLine = {p1, p2};
@@ -64,28 +66,11 @@ export class GraphComponent {
       this.lines.push(l);
       this.points.push(p1, p2);
     }
-
-    this.closestOutline();
-    this.outlineSmooth();
-
-    // this.testVisiblePoints();
-    // this.testAngle();
   }
 
   svgSelect = (id: string) => {
     const point = this.points[id];
     this.draggingPoint = {x0: point.x, y0: point.y};
-    // console.log(point.x, point.y, point.line);
-
-/*
-    const intersectionPoints: IPoint[] = this.intersectionPoints(this.lines);
-    const allPoints: IPoint[] = [...this.points, ...intersectionPoints];
-
-    const points = this.visiblePoints(point, allPoints, this.lines);
-    this.markerPoints = [];
-    this.addMarkerPoints(points);
-*/
-
   }
 
   svgDrag = (id: string, x: number, y: number) => {
