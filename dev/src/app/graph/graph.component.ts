@@ -34,6 +34,15 @@ export class GraphComponent {
   public lines: IGLine[] = [];
   public points: IGPoint[] = [];
   draggingPoint: {x0: number, y0: number};
+  public outlinePoints: IGPoint[] = [];
+  public outlineLines(): IGLine[] {
+    const result: IGLine[] = [];
+    for (let i = 1; i < this.outlinePoints.length; i++) {
+      result.push({p1: this.outlinePoints[i - 1], p2: this.outlinePoints[i]})
+    }
+    return result;
+  }
+
   inters: IPoint & any;
   public markerPoints: IMarkerPoint[] = [];
   public markerLines: IMarkerLine[] = [];
@@ -59,6 +68,8 @@ export class GraphComponent {
     }
 
     this.closestOutline();
+
+    this.outlineLines();
     // this.testVisiblePoints();
     // this.testAngle();
   }
@@ -170,21 +181,19 @@ export class GraphComponent {
   }
 
   private closestOutline() {
-    this.markerPoints = [];
-    this.markerLines = [];
+    this.outlinePoints = [];
 
     // take most left point (with min x)
     const firstPoint = this.points.sort((p1, p2) => p1.x - p2.x)[0];
+    this.outlinePoints.push(firstPoint);
     let currentPoint = firstPoint;
-    let currentLine: ILine = {p1: {x: firstPoint.x - 3, y: firstPoint.y}, p2: firstPoint};
+    let currentLine: ILine = {p1: {x: firstPoint.x - 1, y: firstPoint.y}, p2: firstPoint};
 
     // find intersection points
     const intersectionPoints: IGPoint[] = this.intersectionPoints(this.lines);
 
     // allPoints = this.points + intersection points
     let allPoints: IGPoint[] = [...this.points, ...intersectionPoints];
-
-    const outlinePoints: IGPoint[] = []
 
     while (true)
     {
@@ -218,8 +227,7 @@ export class GraphComponent {
         .sort((o1, o2) => o1.dist - o2.dist)[0].point;
 
       const nextLine = {p1: currentPoint, p2: nextPoint};
-      outlinePoints.push(nextPoint);
-      this.addMarkerLines([nextLine]);
+      this.outlinePoints.push(nextPoint);
 
       currentPoint = nextPoint;
       currentLine = nextLine;
