@@ -110,6 +110,9 @@ export class GraphComponent implements OnInit {
     point.y = this.draggingPoint.y0 + y;
   }
 
+  svgDragStart = () => {
+  }
+
   svgDragEnd = () => {
     this.calc();
 
