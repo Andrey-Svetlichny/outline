@@ -11,7 +11,7 @@ export class AppComponent implements OnInit {
 
   public linesData: string;
   modelChanged: Subject<string> = new Subject<string>();
-  distance = 10;
+  distance = 25;
   angle = 1;
 
   constructor() {
