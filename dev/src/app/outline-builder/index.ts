@@ -1,10 +1,13 @@
-import {EPSILON, ILine, lineAngle, lineIntersectionPoint, lineIntersects, pointToLineDistance} from './geometry';
-import {IGLine, IGPoint} from '../graph/graph.component';
+import {EPSILON, ILine, IPoint, lineAngle, lineIntersectionPoint, lineIntersects, pointToLineDistance} from './geometry';
+import {IGLine, IGPoint, IMarkerLine, IMarkerPoint} from '../graph/graph.component';
 
 export class OutlineBuilder {
   public lines: IGLine[] = [];
   public points: IGPoint[] = []; // dragging handles at the ends of lines
   public outlinePoints: IGPoint[] = [];
+  public markerPoints: IMarkerPoint[] = [];
+  public markerLines: IMarkerLine[] = [];
+  public animate = false;
 
   public buildOutline(angle: number, distance: number) {
     console.log('buildOutline');
@@ -31,13 +34,21 @@ export class OutlineBuilder {
     // allPoints = this.points + intersection points
     let allPoints: IGPoint[] = [...this.points, ...intersectionPoints];
 
-    // remove points with same coordinates (save lines)
+    // merge points with same coordinates (save lines)
     const allPointsFilt: IGPoint[] = [];
     for (const point of allPoints) {
       const nextPointWithSameCoord = allPoints
         .find(p => p !== point && p.x === point.x && p.y === point.y && allPoints.indexOf(p) > allPoints.indexOf(point));
       if (nextPointWithSameCoord) {
-        nextPointWithSameCoord.lines = [...nextPointWithSameCoord.lines, ...point.lines];
+        nextPointWithSameCoord.lines.push(...point.lines);
+        for (const line of point.lines) {
+          if (line.p1 === point) {
+            line.p1 = nextPointWithSameCoord;
+          }
+          if (line.p2 === point) {
+            line.p2 = nextPointWithSameCoord;
+          }
+        }
       } else {
         allPointsFilt.push(point);
       }
@@ -45,6 +56,12 @@ export class OutlineBuilder {
     allPoints = allPointsFilt;
 
     while (true) {
+      if (this.animate) {
+        this.markerPoints.length = 0;
+        this.addMarkerPoints([currentPoint]);
+        await delay(1000);
+      }
+
       // all points except current
       let nextPoints: IGPoint[] = allPoints.filter(p => p !== currentPoint);
 
@@ -66,16 +83,27 @@ export class OutlineBuilder {
         vectorsFromCurrentPoint = vectorsFromCurrentPoint.filter(v => pointToLineDistance(currentLine.p1, v) > EPSILON);
       }
 
+      if (this.animate) {
+        this.addMarkerLines(vectorsFromCurrentPoint);
+        if (vectorsFromCurrentPoint.length > 1) {
+          await delay(1000);
+        }
+        this.markerLines.length = 0;
+      }
+
       // sort by angle relative to currentLine, take first
       const nextVector = vectorsFromCurrentPoint.map(v => ({v, angle: lineAngle(currentLine, v)}))
         .sort((o1, o2) => o1.angle - o2.angle)[0].v;
 
+      if (this.animate) {
+        this.addMarkerLines([nextVector]);
+        await delay(1000);
+        this.markerLines.length = 0;
+      }
+
       // take one of nextPoints, nearest to nextVector
       const nextPoint = nextPoints.map(p => ({point: p, dist: pointToLineDistance(p, nextVector)}))
         .sort((o1, o2) => o1.dist - o2.dist)[0].point;
-      // console.log('nextPoints= ', nextPoints);
-      // console.log('nextPoint= ', nextPoint);
-      // debugger;
 
       const nextLine = {p1: currentPoint, p2: nextPoint};
       this.outlinePoints.push(nextPoint);
@@ -83,12 +111,11 @@ export class OutlineBuilder {
       currentPoint = nextPoint;
       currentLine = nextLine;
       if (nextPoint === firstPoint) {
+        if (this.animate) {
+          this.markerPoints.length = 0;
+        }
         break;
       }
-
-      // this.addMarkerPoints([currentPoint]);
-      // await delay(1000);
-      // this.markerPoints = [];
     }
   }
 
@@ -183,6 +210,14 @@ export class OutlineBuilder {
     return result;
   }
 
+
+  private addMarkerPoints(points: IPoint[], color: string = 'red') {
+    this.markerPoints.push(...points.map(p => ({x: p.x, y: p.y, color})));
+  }
+
+  private addMarkerLines(lines: ILine[], color: string = 'red') {
+    this.markerLines.push(...lines.map(l => ({p1: l.p1, p2: l.p2, color})));
+  }
 
 }
 

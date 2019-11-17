@@ -71,6 +71,8 @@ export class GraphComponent implements OnInit {
     builder.lines = this.lines;
     builder.points = this.points;
     builder.outlinePoints = this.outlinePoints;
+    builder.markerLines = this.markerLines;
+    builder.markerPoints = this.markerPoints;
     this.outlineBuilder = builder;
   }
 
@@ -121,6 +123,7 @@ export class GraphComponent implements OnInit {
 
   }
 
+/*
   private checkIntersect() {
     const l1 = this.lines[0];
     const l2 = this.lines[1];
@@ -135,6 +138,7 @@ export class GraphComponent implements OnInit {
     const dist = pointToLineDistance(l1.p1, l2);
     console.log(dist);
   }
+*/
 
 
 /*
@@ -164,13 +168,5 @@ export class GraphComponent implements OnInit {
   }
 */
 
-
-  private addMarkerPoints(points: IPoint[], color: string = 'red') {
-    this.markerPoints = [...this.markerPoints, ...points.map(p => ({x: p.x, y: p.y, color}))];
-  }
-
-  private addMarkerLines(lines: ILine[], color: string = 'red') {
-    this.markerLines = [...this.markerLines, ...lines.map(l => ({p1: l.p1, p2: l.p2, color}))];
-  }
 
 }
