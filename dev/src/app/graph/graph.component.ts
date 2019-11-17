@@ -183,8 +183,13 @@ export class GraphComponent implements OnInit {
     this.addMarkerPoints(result);
   }
 
-  private closestOutline() {
+
+  private async closestOutline() {
     this.outlinePoints = [];
+
+    function delay(ms: number) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
     // take most left point (with min x)
     const firstPoint = this.points.sort((p1, p2) => p1.x - p2.x)[0];
@@ -196,7 +201,20 @@ export class GraphComponent implements OnInit {
     const intersectionPoints: IGPoint[] = this.intersectionPoints(this.lines);
 
     // allPoints = this.points + intersection points
-    const allPoints: IGPoint[] = [...this.points, ...intersectionPoints];
+    let allPoints: IGPoint[] = [...this.points, ...intersectionPoints];
+
+    // remove points with same coordinates (save lines)
+    const allPointsFilt: IGPoint[] = [];
+    for (const point of allPoints) {
+      const nextPointWithSameCoord = allPoints
+        .find(p => p !== point && p.x === point.x && p.y === point.y && allPoints.indexOf(p) > allPoints.indexOf(point));
+      if (nextPointWithSameCoord) {
+        nextPointWithSameCoord.lines = [...nextPointWithSameCoord.lines, ...point.lines];
+      } else {
+        allPointsFilt.push(point);
+      }
+    }
+    allPoints = allPointsFilt;
 
     while (true) {
       // all points except current
@@ -222,11 +240,14 @@ export class GraphComponent implements OnInit {
 
       // sort by angle relative to currentLine, take first
       const nextVector = vectorsFromCurrentPoint.map(v => ({v, angle: lineAngle(currentLine, v)}))
-        .sort((o1, o2) => o1.angle - o2.angle )[0].v;
+        .sort((o1, o2) => o1.angle - o2.angle)[0].v;
 
       // take one of nextPoints, nearest to nextVector
       const nextPoint = nextPoints.map(p => ({point: p, dist: pointToLineDistance(p, nextVector)}))
         .sort((o1, o2) => o1.dist - o2.dist)[0].point;
+      // console.log('nextPoints= ', nextPoints);
+      // console.log('nextPoint= ', nextPoint);
+      // debugger;
 
       const nextLine = {p1: currentPoint, p2: nextPoint};
       this.outlinePoints.push(nextPoint);
@@ -236,6 +257,10 @@ export class GraphComponent implements OnInit {
       if (nextPoint === firstPoint) {
         break;
       }
+
+      this.addMarkerPoints([currentPoint]);
+      await delay(1000);
+      this.markerPoints = [];
     }
   }
 
