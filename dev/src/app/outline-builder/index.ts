@@ -1,12 +1,20 @@
 import {EPSILON, ILine, IPoint, lineAngle, lineIntersectionPoint, lineIntersects, pointToLineDistance} from './geometry';
-import {IGLine, IGPoint, IMarkerLine, IMarkerPoint} from '../graph/graph.component';
+
+// graph point
+export interface IGPoint extends IPoint {
+  x: number;
+  y: number;
+  lines: IGLine[];
+}
+export interface IGLine {
+  p1: IGPoint;
+  p2: IGPoint;
+}
 
 export class OutlineBuilder {
   public lines: IGLine[] = [];
   public points: IGPoint[] = []; // dragging handles at the ends of lines
   public outlinePoints: IGPoint[] = [];
-  public markerPoints: IMarkerPoint[] = [];
-  public markerLines: IMarkerLine[] = [];
 
   public buildOutline(angle: number, distance: number) {
       this.closestOutline();

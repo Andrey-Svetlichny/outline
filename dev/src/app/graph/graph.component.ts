@@ -1,25 +1,12 @@
-import {Component, EventEmitter, Input, Output, OnInit} from '@angular/core';
-import {
-  ILine, IPoint, lineAngle, lineIntersects, lineIntersectionPoint, pointToLineDistance, EPSILON
-} from '../outline-builder/geometry';
-import {OutlineBuilder} from '../outline-builder';
+import {Component, Input, OnInit} from '@angular/core';
+import {ILine, IPoint} from '../outline-builder/geometry';
+import {IGLine, IGPoint, OutlineBuilder} from '../outline-builder';
 
 export interface IMarkerPoint extends IPoint {
   color: string;
 }
 export interface IMarkerLine extends ILine {
   color: string;
-}
-
-// graph point
-export interface IGPoint extends IPoint {
-  x: number;
-  y: number;
-  lines: IGLine[];
-}
-export interface IGLine {
-  p1: IGPoint;
-  p2: IGPoint;
 }
 
 // noinspection UnterminatedStatementJS
@@ -71,8 +58,8 @@ export class GraphComponent implements OnInit {
     builder.lines = this.lines;
     builder.points = this.points;
     builder.outlinePoints = this.outlinePoints;
-    builder.markerLines = this.markerLines;
-    builder.markerPoints = this.markerPoints;
+    // builder.markerLines = this.markerLines;
+    // builder.markerPoints = this.markerPoints;
     this.outlineBuilder = builder;
   }
 
