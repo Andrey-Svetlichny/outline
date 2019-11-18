@@ -12,6 +12,7 @@ export class OutlineBuilder {
       this.closestOutline();
       this.outlineSmooth(angle, distance);
   }
+
   private closestOutline() {
     this.outlinePoints.length = 0; // do not reassign whole array
 
@@ -26,27 +27,7 @@ export class OutlineBuilder {
 
     // allPoints = this.points + intersection points
     let allPoints: IGPoint[] = [...this.points, ...intersectionPoints];
-
-    // merge points with same coordinates (save lines)
-    const allPointsFilt: IGPoint[] = [];
-    for (const point of allPoints) {
-      const nextPointWithSameCoord = allPoints
-        .find(p => p !== point && p.x === point.x && p.y === point.y && allPoints.indexOf(p) > allPoints.indexOf(point));
-      if (nextPointWithSameCoord) {
-        nextPointWithSameCoord.lines.push(...point.lines);
-        for (const line of point.lines) {
-          if (line.p1 === point) {
-            line.p1 = nextPointWithSameCoord;
-          }
-          if (line.p2 === point) {
-            line.p2 = nextPointWithSameCoord;
-          }
-        }
-      } else {
-        allPointsFilt.push(point);
-      }
-    }
-    allPoints = allPointsFilt;
+    allPoints = this.mergePointsWithSameCoordinates(allPoints);
 
     while (true) {
       // all points except current
@@ -177,5 +158,28 @@ export class OutlineBuilder {
     }
     return result;
   }
+
+  // merge points with same coordinates (save lines)
+  private mergePointsWithSameCoordinates(points: IGPoint[]): IGPoint[] {
+    const result: IGPoint[] = [];
+    for (const point of points) {
+      const pointToMerge = points.find(p => p.x === point.x && p.y === point.y && points.indexOf(p) > points.indexOf(point));
+      if (pointToMerge) {
+        pointToMerge.lines.push(...point.lines);
+        for (const line of point.lines) {
+          if (line.p1 === point) {
+            line.p1 = pointToMerge;
+          }
+          if (line.p2 === point) {
+            line.p2 = pointToMerge;
+          }
+        }
+      } else {
+        result.push(point);
+      }
+    }
+    return  result;
+  }
+
 }
 
