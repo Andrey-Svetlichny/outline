@@ -8,14 +8,16 @@ export interface ILine {
   p2: IPoint;
 }
 
-export const EPSILON: number = 1e-5;
+export const EPSILON = 1e-5;
 
 /**
  * Angle between 2 vectors
  */
 export function lineAngle(l1: ILine, l2: ILine) {
-  const x1 = l1.p2.x - l1.p1.x, y1 = l1.p2.y - l1.p1.y;
-  const x2 = l2.p2.x - l2.p1.x, y2 = l2.p2.y - l2.p1.y;
+  const x1 = l1.p2.x - l1.p1.x;
+  const y1 = l1.p2.y - l1.p1.y;
+  const x2 = l2.p2.x - l2.p1.x;
+  const y2 = l2.p2.y - l2.p1.y;
 
   let angle = Math.atan2(y2, x2) - Math.atan2(y1, x1);
 
@@ -27,11 +29,13 @@ export function lineAngle(l1: ILine, l2: ILine) {
   return angle;
 }
 
-function sqr(x) { return x * x }
-function dist2(v, w) { return sqr(v.x - w.x) + sqr(v.y - w.y) }
+function sqr(x) { return x * x; }
+function dist2(v, w) { return sqr(v.x - w.x) + sqr(v.y - w.y); }
 function distToSegmentSquared(p, v, w) {
   const l2 = dist2(v, w);
-  if (l2 == 0) return dist2(p, v);
+  if (l2 === 0) {
+    return dist2(p, v);
+  }
   let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
   t = Math.max(0, Math.min(1, t));
   return dist2(p, { x: v.x + t * (w.x - v.x),
@@ -51,7 +55,10 @@ export function pointToLineDistance(p: IPoint, line: ILine) {
  * assume collinear line not cross
  */
 export function lineIntersects(l1: ILine, l2: ILine) {
-  const p= l1.p1, p2= l1.p2, q= l2.p1, q2= l2.p2;
+  const p = l1.p1;
+  const p2 = l1.p2;
+  const q = l2.p1;
+  const q2 = l2.p2;
   const r = subtractPoints(p2, p);
   const s = subtractPoints(q2, q);
 
@@ -77,9 +84,16 @@ export function lineIntersects(l1: ILine, l2: ILine) {
 
 
 export function lineIntersectionPoint(l1: ILine, l2: ILine): IPoint {
-  const x1=l1.p1.x, y1=l1.p1.y, x2=l1.p2.x, y2=l1.p2.y, x3=l2.p1.x, y3=l2.p1.y, x4=l2.p2.x, y4=l2.p2.y;
-  const px= ( (x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4) ) / ( (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4) );
-  const py= ( (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4) ) / ( (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4) );
+  const x1 = l1.p1.x;
+  const y1 = l1.p1.y;
+  const x2 = l1.p2.x;
+  const y2 = l1.p2.y;
+  const x3 = l2.p1.x;
+  const y3 = l2.p1.y;
+  const x4 = l2.p2.x;
+  const y4 = l2.p2.y;
+  const px = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+  const py = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
   return {x: px, y: py};
 }
 
@@ -90,8 +104,4 @@ function crossProduct(point1, point2) {
 
 function subtractPoints(point1: IPoint, point2: IPoint): IPoint {
   return {x: point1.x - point2.x, y: point1.y - point2.y};
-}
-
-function equalPoints(point1: IPoint, point2: IPoint): boolean {
-  return (point1.x == point2.x) && (point1.y == point2.y)
 }
