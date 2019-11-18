@@ -17,8 +17,6 @@
   <line id="{{id}}" *ngFor="let l of markerLines; let id = index"
         attr.x1="{{l.p1.x}}" attr.y1="{{l.p1.y}}" attr.x2="{{l.p2.x}}" attr.y2="{{l.p2.y}}" attr.stroke="{{l.color}}" stroke-width="0.3" stroke-dasharray="3 2" marker-end="url(#arrow)" />
 
-  <ellipse *ngIf="inters" attr.cx="{{inters.x}}" attr.cy="{{inters.y}}" rx="1" ry="1" attr.fill="{{inters.color}}" fill-opacity="0.3" />
-
   <line *ngFor="let l of outlineLines()"
         attr.x1="{{l.p1.x}}" attr.y1="{{l.p1.y}}" attr.x2="{{l.p2.x}}" attr.y2="{{l.p2.y}}" stroke="red" stroke-width="0.3" stroke-opacity="0.3" />
 

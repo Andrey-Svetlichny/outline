@@ -22,7 +22,6 @@ export class GraphComponent implements OnInit {
   draggingPoint: {x0: number, y0: number};
   public outlinePoints: IGPoint[] = [];
 
-  inters: IPoint & any;
   public markerPoints: IMarkerPoint[] = [];
   public markerLines: IMarkerLine[] = [];
   private _angle: number;
@@ -102,61 +101,5 @@ export class GraphComponent implements OnInit {
 
   svgDragEnd = () => {
     this.calc();
-
-/*
-    // test angle
-    const l1 = this.markerLines[0];
-    const l2 = this.markerLines[1];
-    const angle = lineAngle(l1, l2);
-    console.log(angle);
-*/
-
   }
-
-/*
-  private checkIntersect() {
-    const l1 = this.lines[0];
-    const l2 = this.lines[1];
-    const hasIntersect = lineIntersects(l1, l2);
-
-    this.inters = lineIntersectionPoint(l1, l2);
-    this.inters.color = hasIntersect ? 'red' : 'blue';
-
-    const angle = lineAngle(l1, l2);
-    // console.log(angle);
-
-    const dist = pointToLineDistance(l1.p1, l2);
-    console.log(dist);
-  }
-*/
-
-
-/*
-  private testAngle() {
-    const p1: IGPoint = {x: 10, y: 50, lines: []};
-    const p2: IGPoint = {x: 50, y: 50, lines: []};
-    const p3: IGPoint = {x: 70, y: 30, lines: []};
-    const l1: IGLine = {p1, p2};
-    const l2: IGLine = {p1: p2, p2: p3};
-    this.addMarkerLines([l1, l2]);
-    this.lines = [];
-    this.points = [p1, p2, p3];
-  }
-*/
-
-/*
-  private testVisiblePoints() {
-    const intersectionPoints: IGPoint[] = this.intersectionPoints(this.lines);
-    const allPoints: IGPoint[] = [...this.points, ...intersectionPoints];
-    const viewPoint = intersectionPoints[4];
-    const points = allPoints.filter(p => p !== viewPoint);
-
-    const result = this.visiblePoints(viewPoint, points, this.lines);
-    this.addMarkerPoints([viewPoint], 'blue');
-    this.addMarkerPoints(points, 'orange');
-    this.addMarkerPoints(result);
-  }
-*/
-
-
 }
