@@ -7,30 +7,12 @@ export class OutlineBuilder {
   public outlinePoints: IGPoint[] = [];
   public markerPoints: IMarkerPoint[] = [];
   public markerLines: IMarkerLine[] = [];
-  public animate = true;
-  private animateDelay = 1000;
 
-  private running = false;
-  private restart = false;
-
-  public async buildOutline(angle: number, distance: number) {
-    if (this.running) {
-      this.restart = true;
-      return;
-    }
-    this.running = true;
-    while (true) {
-      this.restart = false;
-      await this.closestOutline();
-      await this.outlineSmooth(angle, distance);
-      if (!this.restart) {
-        break;
-      }
-    }
-    this.running = false;
+  public buildOutline(angle: number, distance: number) {
+      this.closestOutline();
+      this.outlineSmooth(angle, distance);
   }
-
-  private async closestOutline() {
+  private closestOutline() {
     this.outlinePoints.length = 0; // do not reassign whole array
 
     // take most left point (with min x)
@@ -67,8 +49,6 @@ export class OutlineBuilder {
     allPoints = allPointsFilt;
 
     while (true) {
-      await this.animation(() => this.addMarkerPoints([currentPoint]));
-
       // all points except current
       let nextPoints: IGPoint[] = allPoints.filter(p => p !== currentPoint);
 
@@ -90,18 +70,9 @@ export class OutlineBuilder {
         vectorsFromCurrentPoint = vectorsFromCurrentPoint.filter(v => pointToLineDistance(currentLine.p1, v) > EPSILON);
       }
 
-      if (vectorsFromCurrentPoint.length > 1) {
-        await this.animation(() => this.addMarkerLines(vectorsFromCurrentPoint));
-      }
-
       // sort by angle relative to currentLine, take first
       const nextVector = vectorsFromCurrentPoint.map(v => ({v, angle: lineAngle(currentLine, v)}))
         .sort((o1, o2) => o1.angle - o2.angle)[0].v;
-
-      await this.animation(() => {
-        this.markerLines.length = 0;
-        this.addMarkerLines([nextVector]);
-      });
 
       // take one of nextPoints, nearest to nextVector
       const nextPoint = nextPoints.map(p => ({point: p, dist: pointToLineDistance(p, nextVector)}))
@@ -112,33 +83,22 @@ export class OutlineBuilder {
 
       currentPoint = nextPoint;
       currentLine = nextLine;
-      if (this.animate) {
-        this.markerLines.length = 0;
-        this.markerPoints.length = 0;
-      }
       if (nextPoint === firstPoint) {
         break;
       }
-      if (this.restart) {
-        break;
-      }
     }
   }
 
-
-  private async outlineSmooth(angle: number, distance: number) {
+  private outlineSmooth(angle: number, distance: number) {
     for (let i = 0; i < this.outlinePoints.length; i++) {
-      if (this.restart) {
-        break;
-      }
       // not cross point
       if (this.points.indexOf(this.outlinePoints[i]) >= 0) {
-        await this.outlineSmoothOnePoint(i, angle, distance);
+        this.outlineSmoothOnePoint(i, angle, distance);
       }
     }
   }
 
-  private async outlineSmoothOnePoint(n: number, angle: number, distance: number) {
+  private outlineSmoothOnePoint(n: number, angle: number, distance: number) {
     interface II {
       index: number;
       point: IGPoint;
@@ -148,8 +108,6 @@ export class OutlineBuilder {
     const currentPoint = outlinePointsWithIndex[n];
     const currentLine = currentPoint.point.lines[0];
 
-    await this.animation(() => this.addMarkerPoints([currentPoint.point], 'blue'));
-
     const nearestLines = this.lines.filter(l => {
       const d = pointToLineDistance(currentPoint.point, l);
       if (d < EPSILON || distance < d) {
@@ -157,8 +115,6 @@ export class OutlineBuilder {
       }
       return Math.abs(lineAngle(currentLine, l)) % (Math.PI / 2) < angle;
     });
-
-    await this.animation(() => this.addMarkerLines(nearestLines));
 
     // next points after currentPoint
     let points: II[] = [];
@@ -181,8 +137,6 @@ export class OutlineBuilder {
       return !points.some(p => p.index < pp.index && p.point === pp.point);
     });
 
-    await this.animation(() => this.addMarkerPoints(points.map(o => o.point), 'orange'));
-
     // last only
     points = points.slice(-1);
 
@@ -194,13 +148,7 @@ export class OutlineBuilder {
       this.outlinePoints.length = 0;
       this.outlinePoints.push(...outlinePointsFiltered);
     }
-
-    if (this.animate) {
-      this.markerLines.length = 0;
-      this.markerPoints.length = 0;
-    }
   }
-
 
   // find lines intersection points
   private intersectionPoints(lines: IGLine[]): IGPoint[] {
@@ -229,25 +177,5 @@ export class OutlineBuilder {
     }
     return result;
   }
-
-  private async animation(callback: () => void, delay: number = this.animateDelay) {
-    if (this.animate) {
-      callback();
-      await this.delay(delay);
-    }
-  }
-
-  private delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  private addMarkerPoints(points: IPoint[], color: string = 'red') {
-    this.markerPoints.push(...points.map(p => ({x: p.x, y: p.y, color})));
-  }
-
-  private addMarkerLines(lines: ILine[], color: string = 'red') {
-    this.markerLines.push(...lines.map(l => ({p1: l.p1, p2: l.p2, color})));
-  }
-
 }
 
