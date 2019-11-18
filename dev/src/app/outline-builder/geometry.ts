@@ -14,12 +14,7 @@ export const EPSILON = 1e-5;
  * Angle between 2 vectors
  */
 export function lineAngle(l1: ILine, l2: ILine) {
-  const x1 = l1.p2.x - l1.p1.x;
-  const y1 = l1.p2.y - l1.p1.y;
-  const x2 = l2.p2.x - l2.p1.x;
-  const y2 = l2.p2.y - l2.p1.y;
-
-  let angle = Math.atan2(y2, x2) - Math.atan2(y1, x1);
+  let angle = Math.atan2(l2.p2.y - l2.p1.y, l2.p2.x - l2.p1.x) - Math.atan2(l1.p2.y - l1.p1.y, l1.p2.x - l1.p1.x);
 
   if (angle > Math.PI) {
     angle -= 2 * Math.PI;
@@ -31,20 +26,21 @@ export function lineAngle(l1: ILine, l2: ILine) {
 
 function sqr(x) { return x * x; }
 function dist2(v, w) { return sqr(v.x - w.x) + sqr(v.y - w.y); }
-function distToSegmentSquared(p, v, w) {
-  const l2 = dist2(v, w);
-  if (l2 === 0) {
-    return dist2(p, v);
-  }
-  let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
-  t = Math.max(0, Math.min(1, t));
-  return dist2(p, { x: v.x + t * (w.x - v.x),
-    y: v.y + t * (w.y - v.y) });
-}
 export function pointToLineDistance(p: IPoint, line: ILine) {
   const v = line.p1;
   const w = line.p2;
-  return Math.sqrt(distToSegmentSquared(p, v, w));
+
+  let distSquared: number;
+  const l2 = dist2(v, w);
+  if (l2 === 0) {
+    distSquared = dist2(p, v);
+  } else {
+    let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+    t = Math.max(0, Math.min(1, t));
+    distSquared = dist2(p, {x: v.x + t * (w.x - v.x), y: v.y + t * (w.y - v.y)});
+  }
+
+  return Math.sqrt(distSquared);
 }
 
 
